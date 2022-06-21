@@ -1,0 +1,212 @@
+<head>
+	<!-- Load plotly.js into the DOM -->
+	<script src='https://cdn.plot.ly/plotly-2.12.1.min.js'></script>
+	<style>
+		p.dotted {border-style: dotted;}
+		</style>
+	<script src="https://unpkg.com/dayjs@1.11.3/dayjs.min.js"></script>
+	
+	 <!-- https://day.js.org/docs/en/plugin/loading-into-browser -->
+	<script src="https://unpkg.com/dayjs@1.11.3/plugin/utc.js"></script>
+	<script>dayjs.extend(window.dayjs_plugin_utc)</script>
+	
+	<script src="https://unpkg.com/dayjs@1.11.3/plugin/customParseFormat.js"></script>
+	<script>dayjs.extend(window.dayjs_plugin_customParseFormat)</script>
+
+	<script src="https://unpkg.com/dayjs@1.11.3/plugin/duration.js"></script>
+	<script>dayjs.extend(window.dayjs_plugin_duration)</script>
+</head>
+
+<body>
+	<p class="dotted" >
+		<label id='drop-area' for="javascript">Drag a /run/logs/debug.log file here</label>
+	</p>
+	<br><br>
+	<div id='actualGraphDiv'><!-- Plotly chart will be drawn inside this DIV --></div>
+
+	<script type = "text/javascript">
+		
+var names = ['Mod Resolution',
+'AccessWideners',
+	'MixinBootstrap',
+	'EntryPoint/PreLaunch', 
+	'PrepareMixins',
+	'Entrypoint/Main',
+	'Entrypoint/Client'
+]
+var messagesToMatch = [
+	'(FabricLoader/Resolution) Mod resolution time',
+	'(FabricLoader/Knot) Setting up languages.',
+	'(FabricLoader/Knot) Setting up mods.',
+	'(FabricLoader/Knot) Loading access wideners.',
+	'(FabricLoader/Mixin) FabricMixin bootstrap init.',
+	'(FabricLoader/Mixin) Computing mixin configs.',
+	'(FabricLoader/Mixin) Applying mixin decorators.',
+	'(FabricLoader/Mixin) FabricMixin bootstrap complete.',
+	'(FabricLoader/Knot) Init transformers.',
+	'(FabricLoader/Knot) Unlock classpath.',
+	"(FabricLoader/Entrypoint) Iterating over entrypoint \'preLaunch\'",
+	"(FabricLoader/Entrypoint) Iterating over entrypoint \'main\'",
+	"(FabricLoader/Entrypoint) Iterating over entrypoint \'client\'"
+]
+var realTimes = [0]
+var messagesDashMatches = [
+	'(DashLoader) Loaded DashLoader in',
+	'(DashLoader) ? DashLoader Statistics.' // NOTE ? is unrecognised symbol- wrong character encoding.
+]
+var phases = [] // 2d array [name, timestamp of msg]
+for (idx in messagesToMatch) {
+	phases[idx] = [0, 0]
+	phases[idx][0] = messagesToMatch[idx]
+}
+console.log(phases)
+
+//https://web.dev/read-files/#select-dnd
+function readFile(file) {
+  const reader = new FileReader();
+  reader.addEventListener('load', (event) => {
+    const result = event.target.result;
+    // Do something with result
+	//console.log(result)
+    var log = readMinecraftLog(result)
+	buildReal()
+  });
+
+  reader.addEventListener('progress', (event) => {
+    if (event.loaded && event.total) {
+      const percent = (event.loaded / event.total) * 100;
+      console.log(`Progress: ${Math.round(percent)}`);
+    }
+  });
+  
+  reader.addEventListener('error', (event) => {
+   console.log(event)
+  });
+  
+  reader.addEventListener('loadend', (event) => {
+   console.log(event)
+  });
+  reader.addEventListener('abort', (event) => {
+   console.log(event)
+  });
+  reader.readAsText(file);
+}
+
+
+
+// https://www.delftstack.com/howto/javascript/javascript-read-file-line-by-line/
+function readMinecraftLog(result) {
+	console.log(`parsing log...`)
+	var fileContentArray = result.split(/\r\n|\n/);
+	var regex = /(\[\d\d:\d\d:\d\d\])( )(\[.*\])( )(.*)/
+
+	for (idx in fileContentArray) {
+		var str = fileContentArray[idx]
+		//console.log(idx+" : "+fileContentArray[idx])
+		var matchGroups = str.match(regex)
+		//console.log(matchGroups)
+		if (matchGroups !== null && matchGroups !== undefined && matchGroups.length > 1) {
+			
+			// we're getting rid of [0] which is full match all sections
+			var triGroup = [matchGroups[1], matchGroups[3], matchGroups[5]]
+			
+			// format: [TIME, LOG_LEVEL, MESSAGE]
+			if (triGroup.length > 1) {
+				var time = String(triGroup[0]).substring(1, triGroup[0].length-1)
+				var timestamp = dayjs(time, 'HH:mm:ss')
+				//console.log(`timestamp ${time} is ${timestamp} of ${triGroup} based on ${matchGroups}`)
+				for (idx2 in messagesToMatch) {
+					var key = messagesToMatch[idx2]
+					var key2 = triGroup[2]
+					//console.log(`compare ${key2} to ${key}`)
+					if (key2.startsWith(key)) {
+						phases[idx2][1] = timestamp
+						console.log(`set ${phases[idx2]}`)
+
+						if (idx2 >= 1) {
+							var lastStamp = phases[idx2-1][1]
+							var thisStamp = phases[idx2][1]
+							//console.log(`dif ${thisStamp} to ${lastStamp} from ${phases[idx2]}`)
+							var diff = thisStamp.diff(lastStamp, 's')
+							realTimes[idx2] = diff
+							//console.log(`is ${diff}`)
+						}
+					}
+				}
+			}
+		}
+	}
+	console.log(phases)
+	console.log(`log parse complete`)
+	return phases
+}
+const dropArea = document.getElementById('drop-area');
+
+dropArea.addEventListener('dragover', (event) => {
+  event.stopPropagation();
+  event.preventDefault();
+  // Style the drag-and-drop as a "copy file" operation.
+  event.dataTransfer.dropEffect = 'copy';
+});
+
+dropArea.addEventListener('drop', (event) => {
+  event.stopPropagation();
+  event.preventDefault();
+  const fileList = event.dataTransfer.files;
+  console.log(fileList);
+  readFile(fileList[0])
+});
+
+// https://plotly.com/javascript/reference/bar/#bar-textposition
+function genPhase(name, duration) {
+	var time = parseInt(duration)
+	var result = {
+		x: [''],
+		y: [time],
+		name: "".concat(name) + " "+time+"s",
+		type: 'bar', 
+		orientation: 'v',
+		text: name + ": "+ duration+" seconds",
+		insidetextanchor : 'middle', 
+		//constraintext: 'both',
+		//textangle : '',
+		hoverinfo: 'name+x'
+		/* marker: {
+			color: 'rgb(158,202,225)',
+			opacity: 0.6,
+			line: {
+				color: 'rgb(8,48,107)',
+				width: 1.5
+			}
+		} */
+	}
+	return result
+}
+
+function buildReal() {
+	
+	var phasesGraph = []
+	var ttl = 0
+	console.log(`generate by ${phases} and ${realTimes}`)
+	for (idx in phases) {
+		var phase = phases[idx][0]
+		var time = realTimes[idx] // Math.floor(Math.random() * 6) // dummy data
+		ttl += parseInt(time)
+		var ph = genPhase(phase, time);
+		//console.log(ph)
+		phasesGraph.push(ph);
+	}
+	var layoutRealGraph = {
+		barmode: 'stack',
+		title:`Minecraft Loading Phase Intervals.
+		<br>Total modpack load time: ${ttl}`
+		+` seconds`,
+		yaxis: {title: 'Duration (seconds)'},
+		xaxis: {title: 'Loading Phase'}
+	};
+	
+	Plotly.newPlot('actualGraphDiv', phasesGraph, layoutRealGraph);
+}
+
+	</script>
+</body>
