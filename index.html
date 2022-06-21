@@ -118,9 +118,9 @@
 
           // format: [TIME, LOG_LEVEL, MESSAGE]
           if (triGroup.length > 1) {
-            var time = String(triGroup[0]).substring(1, triGroup[0].length - 1)
-            var timestamp = dayjs(time, 'HH:mm:ss')
-            //console.log(`timestamp ${time} is ${timestamp} of ${triGroup} based on ${matchGroups}`)
+            var thisPhaseTime = String(triGroup[0]).substring(1, triGroup[0].length - 1)
+            var timestamp = dayjs(thisPhaseTime, 'HH:mm:ss')
+            console.log(`timestamp ${thisPhaseTime} is ${timestamp} of ${triGroup} based on ${matchGroups}`)
             for (idx2 in messagesToMatch) {
               var key = messagesToMatch[idx2]
               var key2 = triGroup[2]
@@ -150,9 +150,11 @@
         if (idx >= phases.length)
           break
         var next = phases[nextId]
+        var thisPhaseTime = thisStamp.format('HH:mm:ss')
+        var thisPhaseName = phases[idx][0]
         // expected: final phase
         if (next === undefined || next === null) {
-          console.log(`next phase ${nextId} is ${next}`)
+          console.log(`next phase ${nextId} is ${next}. Current phase ${thisPhaseName} timestamp is ${thisPhaseTime}`)
           realTimes[nextId] = 0
           continue
         }
@@ -167,8 +169,7 @@
        // console.log(`dif ${thisStamp} to ${nextStamp} from ${phases[idx]}`)
         var diff = nextStamp.diff(thisStamp, 's')
         realTimes[idx] = diff
-        var time = thisStamp.format('HH:mm:ss')
-        console.log(`phase ${idx} vs ${nextId} ${phases[idx][0]} starting ${time} took ${realTimes[idx]}s`)
+        console.log(`phase ${idx} vs ${nextId} ${thisPhaseName} starting ${thisPhaseTime} took ${realTimes[idx]}s`)
       }
       console.log(phases)
 
