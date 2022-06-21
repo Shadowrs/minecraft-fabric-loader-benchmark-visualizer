@@ -51,17 +51,19 @@
       '(FabricLoader/Knot) Unlock classpath.',
       "(FabricLoader/Entrypoint) Iterating over entrypoint \'preLaunch\'",
       "(FabricLoader/Entrypoint) Iterating over entrypoint \'main\'",
-      "(FabricLoader/Entrypoint) Iterating over entrypoint \'client\'"
+      "(FabricLoader/Entrypoint) Iterating over entrypoint \'client\'",
+      '(DashLoader) ? DashLoader Statistics.',
+      'Created: 256x256x0 minecraft:textures/atlas/mob_effects.png-atlas'
     ]
-    var realTimes = [0]
+    var realTimes = [0] // first is 0
     var messagesDashMatches = [
       '(DashLoader) Loaded DashLoader in',
       '(DashLoader) ? DashLoader Statistics.' // NOTE ? is unrecognised symbol- wrong character encoding.
     ]
     var phases = [] // 2d array [name, timestamp of msg]
     for (idx in messagesToMatch) {
-      phases[idx] = [0, 0]
-      phases[idx][0] = messagesToMatch[idx]
+      phases[idx] = [0, 0, 0] // initialize segments
+      phases[idx][0] = messagesToMatch[idx] // set value
     }
     console.log(phases)
 
@@ -123,24 +125,57 @@
               var key = messagesToMatch[idx2]
               var key2 = triGroup[2]
               //console.log(`compare ${key2} to ${key}`)
-              if (key2.startsWith(key)) {
+              if (key2.includes(key)) {
                 phases[idx2][1] = timestamp
-                console.log(`set ${phases[idx2]}`)
-
-                if (idx2 >= 1) {
-                  var lastStamp = phases[idx2 - 1][1]
-                  var thisStamp = phases[idx2][1]
-                  //console.log(`dif ${thisStamp} to ${lastStamp} from ${phases[idx2]}`)
-                  var diff = thisStamp.diff(lastStamp, 's')
-                  realTimes[idx2] = diff
-                  //console.log(`is ${diff}`)
-                }
+                //console.log(`set ${phases[idx2][0]} as ${time}`)
               }
             }
           }
         }
       }
+      function isValid(entry) {
+        return entry[1] instanceof dayjs
+      }
+      phases = phases.filter(isValid)
       console.log(phases)
+      for (idx in phases) {
+        var thisStamp = phases[idx][1]
+        var nextId = parseInt(idx) + 1
+        // edgecase: a phase not present. solved by pruning null timestamps and setting as value 0.
+        if ((thisStamp instanceof dayjs) === false) {
+          console.log(`no timestamp found for current phase ${idx} is ${thisStamp}`)
+          realTimes[nextId] = 0
+          continue
+        }
+        if (idx >= phases.length)
+          break
+        var next = phases[nextId]
+        // expected: final phase
+        if (next === undefined || next === null) {
+          console.log(`next phase ${nextId} is ${next}`)
+          realTimes[nextId] = 0
+          continue
+        }
+        var nextStamp = next[1]
+       // console.log(`${nextStamp}`)
+       // expected: dashloader phase timestamp won't be present if mod is disabled
+        if ((nextStamp instanceof dayjs) === false) {
+          console.log(`no timestamp found for next phase ${nextId} is ${next[0]}`)
+          realTimes[idx] = 0
+          continue
+        }
+       // console.log(`dif ${thisStamp} to ${nextStamp} from ${phases[idx]}`)
+        var diff = nextStamp.diff(thisStamp, 's')
+        realTimes[idx] = diff
+        var time = thisStamp.format('HH:mm:ss')
+        console.log(`phase ${idx} vs ${nextId} ${phases[idx][0]} starting ${time} took ${realTimes[idx]}s`)
+      }
+      console.log(phases)
+
+      function validTime(number) {
+        return typeof(number) === 'number'
+      }
+      realTimes = realTimes.filter(validTime)
       console.log(`log parse complete`)
       return phases
     }
