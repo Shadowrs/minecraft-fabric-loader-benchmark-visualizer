@@ -4,7 +4,7 @@ A plain-javascript single-page tool which parses the log4j formatted /log/debug.
 
 ![alt](https://i.imgur.com/ynZy5Zg.png)
 
-[Dummy debug.log](https://www.dropbox.com/s/cd8a2ztmp3un0uv/debug.log?dl=1)
+[Give it a go](https://shadowrs.github.io/minecraft-fabric-loader-benchmark-visualizer/) with your own debug.log or use a [dummy debug.log](https://www.dropbox.com/s/cd8a2ztmp3un0uv/debug.log?dl=1)
 
 # Modifying
 
