@@ -61,10 +61,17 @@
       '(DashLoader) ? DashLoader Statistics.' // NOTE ? is unrecognised symbol- wrong character encoding.
     ]
     var phases = [] // 2d array [name, timestamp of msg]
-    for (idx in messagesToMatch) {
-      phases[idx] = [0, 0, 0] // initialize segments
-      phases[idx][0] = messagesToMatch[idx] // set value
+    resetPhases()
+
+    function resetPhases() {
+      phases = [] 
+      realTimes = [0] 
+      for (idx in messagesToMatch) {
+        phases[idx] = [0, 0, 0] // initialize segments
+        phases[idx][0] = messagesToMatch[idx] // set value
+      }
     }
+
     console.log(phases)
 
     //https://web.dev/read-files/#select-dnd
@@ -74,6 +81,7 @@
         const result = event.target.result;
         // Do something with result
         //console.log(result)
+        resetPhases()
         var log = readMinecraftLog(result)
         buildReal()
       });
@@ -120,7 +128,7 @@
           if (triGroup.length > 1) {
             var thisPhaseTime = String(triGroup[0]).substring(1, triGroup[0].length - 1)
             var timestamp = dayjs(thisPhaseTime, 'HH:mm:ss')
-            console.log(`timestamp ${thisPhaseTime} is ${timestamp} of ${triGroup} based on ${matchGroups}`)
+           // console.log(`timestamp ${thisPhaseTime} is ${timestamp} of ${triGroup} based on ${matchGroups}`)
             for (idx2 in messagesToMatch) {
               var key = messagesToMatch[idx2]
               var key2 = triGroup[2]
