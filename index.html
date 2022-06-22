@@ -30,49 +30,93 @@
 
   <script type="text/javascript">
 
-    var names = ['Mod Resolution',
-      'AccessWideners',
-      'MixinBootstrap',
-      'EntryPoint/PreLaunch',
-      'PrepareMixins',
-      'Entrypoint/Main',
-      'Entrypoint/Client'
-    ]
     var messagesToMatch = [
       '(FabricLoader/Resolution) Mod resolution time',
       '(FabricLoader/Knot) Setting up languages.',
       '(FabricLoader/Knot) Setting up mods.',
       '(FabricLoader/Knot) Loading access wideners.',
+
       '(FabricLoader/Mixin) FabricMixin bootstrap init.',
       '(FabricLoader/Mixin) Computing mixin configs.',
       '(FabricLoader/Mixin) Applying mixin decorators.',
       '(FabricLoader/Mixin) FabricMixin bootstrap complete.',
+
       '(FabricLoader/Knot) Init transformers.',
       '(FabricLoader/Knot) Unlock classpath.',
       "(FabricLoader/Entrypoint) Iterating over entrypoint \'preLaunch\'",
-      "(FabricLoader/Entrypoint) Iterating over entrypoint \'main\'",
-      "(FabricLoader/Entrypoint) Iterating over entrypoint \'client\'",
-      '(DashLoader) ? DashLoader Statistics.',
-      'Created: 256x256x0 minecraft:textures/atlas/mob_effects.png-atlas'
+      "(FabricLoader/Entrypoint) Iterating over entrypoint \'main\'", // 12th entry, idx 11
+
+      "(FabricLoader/Entrypoint) Iterating over entrypoint \'client\'", //idx 12, 13th entry
+      
+      "Backend library: LWJGL version", // idx13
+      "(CtsRegistry) Hello From 'Slight", //after lwjgl
+
+      "(FabricLoader/Mixin) cherishedworlds.mixins.json:MixinSelectWorldScreen from mod cherishedworlds->@Inject::cherishedworlds$render(Lnet/minecraft/class_4587;IIFLorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V won't be passed a CallbackInfo as a result", //15
+      
+      "Mixing client.KeyboardInputMixin from mixins.crawl", //14 guessing useful for w.e i removed cherish? used cts instead
+
+      "(KubeJS) Loaded client.properties",  // after cherish
+
+      "(FabricLoader/Mixin) milk.mixins.json:BackgroundRendererMixin from mod milk-", //16
+
+      "(botania) Instantiating client xplat im", // 17
+
+      "(net.minecraft.class_1088) Exception loading blockstate definition: byg:blockstates/potted_hydrangea_bush.json: java.io.FileNotF", // minecraft insta post botania
+
+      "(net.minecraft.class_1088) Unable to resolve texture reference: #missing in autoworkstations:block/iron_auto_anvil", // 18
+
+      "(FabricLoader/Mixin) fabric-renderer-api-v1.mixins.json:client.MixinWeightedBakedModel from mod fabric-renderer-api-v1->@Inject::onInit(Ljava/util/List;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V won't be passed a CallbackInfo as a result", 
+
+      "(FabricLoader/Mixin) Mixing client.MixinLayerDefinitions from byg_fabric.mixins.json", // 19
+
+      //"(DashLoader) ? DashLoader Statistics.", // 20
+
+      'Created: 256x256x0 minecraft:textures/atlas/mob_effects.png-atlas' // 21
     ]
+    var labels = [
+      "", "", "", "", 
+      "", "", "", "", 
+      "", "", "", "", 
+      "", // 13 fabric prefixes log msgs
+      "LWJGL",  //14th entry, idx 13
+      "mixins",
+      "cherished worldSelect mixin", //16
+      "keyboard", //15
+      "mixins",
+      "milk mod mixin",  //17
+      "botania", //19
+      "mc blockstates",
+      "mc textures net.minecraft.class_1088", //19
+      "unknown gap", //20
+      "mixins",
+      //"dash", //21 dash
+      "game ready" //22
+    ]
+    var usePreviousLogTimestamp = []
+    for (idx in messagesToMatch) {
+      usePreviousLogTimestamp[idx] = false
+    }
+    var usePreviousLogTimestampIndicies = [13, 14, 15, 16, 17, 18, 19, 20, 21] // not in use now
+    for (idx in usePreviousLogTimestampIndicies) {
+      usePreviousLogTimestamp[usePreviousLogTimestampIndicies[idx]] = true
+    }
+   // console.log(`use prev ${usePreviousLogTimestamp}`)
+    
     var realTimes = [0] // first is 0
-    var messagesDashMatches = [
-      '(DashLoader) Loaded DashLoader in',
-      '(DashLoader) ? DashLoader Statistics.' // NOTE ? is unrecognised symbol- wrong character encoding.
-    ]
-    var phases = [] // 2d array [name, timestamp of msg]
+    
+    var phases = [] // 2d array [e][LOG_MSG_KEY, DATEJS_STAMP, PREV_LOG_STAMP]
     resetPhases()
 
     function resetPhases() {
       phases = [] 
       realTimes = [0] 
       for (idx in messagesToMatch) {
-        phases[idx] = [0, 0, 0] // initialize segments
+        phases[idx] = ["", 0, ""] // initialize segments. [LOG_MSG_KEY, DATEJS_STAMP, PREV_LOG_STAMP]
         phases[idx][0] = messagesToMatch[idx] // set value
       }
     }
 
-    console.log(phases)
+   // console.log(phases)
 
     //https://web.dev/read-files/#select-dnd
     function readFile(file) {
@@ -89,7 +133,7 @@
       reader.addEventListener('progress', (event) => {
         if (event.loaded && event.total) {
           const percent = (event.loaded / event.total) * 100;
-          console.log(`Progress: ${Math.round(percent)}`);
+         // console.log(`Progress: ${Math.round(percent)}`);
         }
       });
 
@@ -106,6 +150,7 @@
       reader.readAsText(file);
     }
 
+    var recordedTimestamps = []
 
 
     // https://www.delftstack.com/howto/javascript/javascript-read-file-line-by-line/
@@ -113,6 +158,7 @@
       console.log(`parsing log...`)
       var fileContentArray = result.split(/\r\n|\n/);
       var regex = /(\[\d\d:\d\d:\d\d\])( )(\[.*\])( )(.*)/
+      var lastTimestampRecorded = ""
 
       for (idx in fileContentArray) {
         var str = fileContentArray[idx]
@@ -126,40 +172,73 @@
 
           // format: [TIME, LOG_LEVEL, MESSAGE]
           if (triGroup.length > 1) {
-            var thisPhaseTime = String(triGroup[0]).substring(1, triGroup[0].length - 1)
+            var thisPhaseTime = String(triGroup[0]).substring(1, triGroup[0].length - 1) // strip [] brackets
+           var prevlastTimestampRecorded = lastTimestampRecorded
+            if (lastTimestampRecorded !== thisPhaseTime) {
+              recordedTimestamps.push(thisPhaseTime)
+              lastTimestampRecorded = thisPhaseTime
+            }
             var timestamp = dayjs(thisPhaseTime, 'HH:mm:ss')
            // console.log(`timestamp ${thisPhaseTime} is ${timestamp} of ${triGroup} based on ${matchGroups}`)
             for (idx2 in messagesToMatch) {
               var key = messagesToMatch[idx2]
               var key2 = triGroup[2]
               //console.log(`compare ${key2} to ${key}`)
+
+              // matched a message we're looking for
               if (key2.includes(key)) {
                 phases[idx2][1] = timestamp
+                phases[idx2][2] = prevlastTimestampRecorded
                 //console.log(`set ${phases[idx2][0]} as ${time}`)
               }
             }
           }
         }
       }
+
+      console.log(lastTimestampRecorded)
+      console.log(recordedTimestamps)
+
       function isValid(entry) {
         return entry[1] instanceof dayjs
       }
-      phases = phases.filter(isValid)
-      console.log(phases)
       for (idx in phases) {
+        if (!isValid(phases[idx])) {
+          console.error(`phase not found in log! ${phases[idx]}`)
+        }
+      }
+      phases = phases.filter(isValid)
+
+      console.log(phases)
+
+      for (idx in phases) {
+        if (idx >= phases.length) // no more target log messages
+          break
+
         var thisStamp = phases[idx][1]
+
+        /* if (usePreviousLogTimestamp[idx]) {
+          var prevLogMsgStamp = dayjs(phases[idx][2], 'HH:mm:ss')
+          var diff = thisStamp.diff(prevLogMsgStamp, 's')
+         // console.log(`dif ${diff}`)
+          console.log(`checking ${labels[idx]} dif from prev log is ${diff} from ${phases[idx]}`)
+          realTimes[idx] = diff
+          continue
+        } */
+        
         var nextId = parseInt(idx) + 1
+
         // edgecase: a phase not present. solved by pruning null timestamps and setting as value 0.
         if ((thisStamp instanceof dayjs) === false) {
           console.log(`no timestamp found for current phase ${idx} is ${thisStamp}`)
           realTimes[nextId] = 0
           continue
         }
-        if (idx >= phases.length)
-          break
+
         var next = phases[nextId]
         var thisPhaseTime = thisStamp.format('HH:mm:ss')
         var thisPhaseName = phases[idx][0]
+
         // expected: final phase
         if (next === undefined || next === null) {
           console.log(`next phase ${nextId} is ${next}. Current phase ${thisPhaseName} timestamp is ${thisPhaseTime}`)
@@ -184,8 +263,9 @@
       function validTime(number) {
         return typeof(number) === 'number'
       }
+      console.log(`pre filter ${realTimes}`)
       realTimes = realTimes.filter(validTime)
-      console.log(`log parse complete`)
+      console.log(`log parse complete ${realTimes}`)
       return phases
     }
     const dropArea = document.getElementById('drop-area');
@@ -206,12 +286,16 @@
     });
 
     // https://plotly.com/javascript/reference/bar/#bar-textposition
-    function genPhase(name, duration) {
+    function genPhase(idx, duration) {
+      var name = phases[idx][0]
       var time = parseInt(duration)
+      if (labels[idx].length > 0) {
+        name = labels[idx]
+      }
       var result = {
         x: [''],
         y: [time],
-        name: "".concat(name) + " " + time + "s",
+        name: "".concat(name) + " : " + time + "s",
         type: 'bar',
         orientation: 'v',
         text: name + ": " + duration + " seconds",
@@ -235,12 +319,12 @@
 
       var phasesGraph = []
       var ttl = 0
-      console.log(`generate by ${phases} and ${realTimes}`)
+      //console.log(`generate by ${phases} and ${realTimes}`)
       for (idx in phases) {
         var phase = phases[idx][0]
         var time = realTimes[idx] // Math.floor(Math.random() * 6) // dummy data
         ttl += parseInt(time)
-        var ph = genPhase(phase, time);
+        var ph = genPhase(idx, time);
         //console.log(ph)
         phasesGraph.push(ph);
       }
