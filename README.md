@@ -2,45 +2,41 @@
 
 A plain-javascript single-page tool which parses the log4j formatted /log/debug.log file from a Minecraft Modpack. Based on the timestamps of various key log messages, calculates the time between phases and displays it on a bar graph.
 
-![alt](https://i.imgur.com/ynZy5Zg.png)
+![alt](https://i.imgur.com/kKUKMKR.png)
 
-[Give it a go](https://shadowrs.github.io/minecraft-fabric-loader-benchmark-visualizer/) with your own debug.log or use a [dummy debug.log](https://www.dropbox.com/s/cd8a2ztmp3un0uv/debug.log?dl=1)
+[Give it a go](https://shadowrs.github.io/minecraft-fabric-loader-benchmark-visualizer/) using a [dummy debug.log](https://www.dropbox.com/s/cd8a2ztmp3un0uv/debug.log?dl=1)
 
-# Modifying
+# Supplying your own debug.log
 
-A simple string.contains() is performed on every line of the log. Target matches are in `messagesToMatch` in [index.html](https://github.com/Shadowrs/minecraft-fabric-loader-benchmark-visualizer/blob/e6e608932f8889cf888b30a3fe73a600116fadff/index.html#L56) to add a new entry to the bar graph.
-
-Disclaimer: some logs such as `(FabricLoader/Knot) Setting up languages.` are not present in the public Fabric-Loader repo, they are custom added in a fork for testing. To use your own build of fabric-loader: 
-
-- Use MultiMC/PolyMC (not sure if its possible to define your own modloader jar in curseforge/ATLauncher/GDLauncher)
-- Install the modpack, for example All Of Fabric 5 (AOF5) from [CurseForge](https://www.curseforge.com/minecraft/modpacks/all-of-fabric-5)
-- On the UI, click Customize > Edit. This opens `C:\Users\xx/AppData\Roaming\PolyMC\instances\All of Fabric 5 - AOF5 - 1.18.2\patches/net.fabricmc.fabric-loader.json` in a text editor.
-- Change the fabric-loader section to your own maven repo like so:
+To run this tool on your own debug.log, you must use PolyMC or the MultiMC Launcher to run Minecraft.
+- On the Launcher UI, click Customize > Edit. This opens `C:\Users\xx/AppData\Roaming\PolyMC\instances\All of Fabric 5 - AOF5 - 1.18.2\patches/net.fabricmc.fabric-loader.json` in a text editor. This file allows you to provide overrides for fabricMC's jars with Forks of each library which include extra logging information printed to debug.log required to identify when a phase begins/ends.
+- Change the fabric-loader and sponge-mixin sections. 
 
 ```
-{
+        {
+            "name": "net.fabricmc:sponge-mixin:0.11.4+mixin.0.8.5-local",
+            "url": "https://repo.repsy.io/mvn/tardisfan/uno/"
+        },
+        {
             "name": "net.fabricmc:fabric-loader:0.14.8+local",
-            "url": "https://repo.repsy.io/mvn/username/reponame/"
+            "url": "https://repo.repsy.io/mvn/tardisfan/uno/"
         }
 ```
 
-- Add the Java Arguments to enable log4j logging - see below
-- Optionally, if compatible with the mods in the modpack, manually add the [DashLoader](https://github.com/alphaqu/DashLoader) mod to launch x2 faster.
+- Modify launch options to include Java args: `-Dfabric.log.debug.level=DEBUG -Dfabric.log.level=DEBUG`
 
-# Prerequisits to generate debug.log
-
-Modify launch options to include Java args: `-Dfabric.log.debug.level=DEBUG -Dfabric.log.level=DEBUG -Dlog4j.configurationFile=B:\log4j.xml`
-
-In the AOF5 1.3.0 modpack, minecraft spams the log with 70k lines of warnings. I reccomend using [this](https://www.dropbox.com/s/2vun33lx27ls79o/log4j.xml?dl=0) log4j.xml format which surpresses the class, or you can add the surpression yourself to your own log4j.xml:
-
-```
-<Loggers>
-		<Logger level="ERROR" name="net.minecraft.class_3294"/>
-	</Loggers>
-```
+- Optionally, if compatible with the mods in the modpack you're going to run, manually add the [DashLoader](https://github.com/alphaqu/DashLoader) mod to launch x2 faster. DashLoader replaces some of the last Minecraft phases of loading (related to models) with heavily optimized caching. 
 
 
-Thanks to:
+
+# How it works
+
+A simple string.contains() is performed on every line of the log. Patterns of unique log messages to matches are in `messagesToMatch` in [index.html](https://github.com/Shadowrs/minecraft-fabric-loader-benchmark-visualizer/blob/e6e608932f8889cf888b30a3fe73a600116fadff/index.html#L56). 
+The timestamp of each log message is parsed. All matches are sorted by timestamp, and the duration of each phase is `nextPhase.start - thisPhase.start`
+
+
+
+# Thanks to
 
 [![alt-text](https://i.imgur.com/OKTTrCm.png)](https://plotly.com/javascript/) for the graph generation.
 
