@@ -31,72 +31,56 @@
   <script type="text/javascript">
 
     var messagesToMatch = [
-      '(FabricLoader/Resolution) Mod resolution time',
-      '(FabricLoader/Knot) Setting up languages.',
-      '(FabricLoader/Knot) Setting up mods.',
-      '(FabricLoader/Knot) Loading access wideners.',
+      ['(FabricLoader/Resolution) Mod resolution time'],
+      ['(FabricLoader/Knot) Setting up languages.'],
+      ['(FabricLoader/Knot) Setting up mods.'],
+      ['(FabricLoader/Knot) Loading access wideners.'],
 
-      '(FabricLoader/Mixin) FabricMixin bootstrap init.',
-      '(FabricLoader/Mixin) Computing mixin configs.',
-      '(FabricLoader/Mixin) Applying mixin decorators.',
-      '(FabricLoader/Mixin) FabricMixin bootstrap complete.',
+      ['(FabricLoader/Mixin) FabricMixin bootstrap init.'],
+      ['(FabricLoader/Mixin) Computing mixin configs.'],
+      ['(FabricLoader/Mixin) Applying mixin decorators.'],
+      ['(FabricLoader/Mixin) FabricMixin bootstrap complete.'],
 
-      '(FabricLoader/Knot) Init transformers.',
-      '(FabricLoader/Knot) Unlock classpath.',
-      "(FabricLoader/Entrypoint) Iterating over entrypoint \'preLaunch\'",
-      "(FabricLoader/Entrypoint) Iterating over entrypoint \'main\'", // 12th entry, idx 11
+      ['(FabricLoader/Knot) Init transformers.'],
+      ['(FabricLoader/Knot) Unlock classpath.'],
 
-      "(FabricLoader/Entrypoint) Iterating over entrypoint \'client\'", //idx 12, 13th entry
-      
-      "Backend library: LWJGL version", // idx13
-      "(CtsRegistry) Hello From 'Slight", //after lwjgl
+      ["(FabricLoader/Mixin) Selecting config of"],
+      ["(FabricLoader/Mixin) Selecting extensions: total"],
+      ["(FabricLoader/Mixin) Begin pendingConfigs preparing: total"], 
+      ["(FabricLoader/Mixin) Begin scanning other targets"], 
 
-      "(FabricLoader/Mixin) cherishedworlds.mixins.json:MixinSelectWorldScreen from mod cherishedworlds->@Inject::cherishedworlds$render(Lnet/minecraft/class_4587;IIFLorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V won't be passed a CallbackInfo as a result", //15
-      
-      "Mixing client.KeyboardInputMixin from mixins.crawl", //14 guessing useful for w.e i removed cherish? used cts instead
+      ["(FabricLoader/Mixin) Begin postInitialise pendingConfigs: total"], 
+      ["(FabricLoader/Mixin) Begin sorting pendingConfigs: total"], 
+      // note: "Entrypoint scan preLaunch" must be excluded because it doesnt fully take into account Mixing Classloading
+      ["(FabricLoader/Mixin) Mixin prepare complete for total", "Sponge: mixing classes for preLaunch entrypoint"],
+      ["(FabricLoader/Knot) prepareModInit on"],
+      ["(FabricLoader/Entrypoint) Iterating over entrypoint \'main\'", "All mods: Sponge Mixing & invoking entrypoint: Main"],
 
-      "(KubeJS) Loaded client.properties",  // after cherish
+      ["(FabricLoader/Entrypoint) Iterating over entrypoint \'client\'", "All mods: Sponge Mixing & invoking entrypoint: Client"], 
+      ["Backend library: LWJGL version"],
+    
+      // ####################
+      // ######## from now on, theres no code to identify phases. its all background loading
+      // #########################
 
-      "(FabricLoader/Mixin) milk.mixins.json:BackgroundRendererMixin from mod milk-", //16
 
-      "(botania) Instantiating client xplat im", // 17
+     [ "(net.minecraft.class_1088) Exception loading blockstate definition: byg:blockstates/potted_hydrangea_bush.json: java.io.FileNotF", "mc blockstates"], // minecraft insta post botania
 
-      "(net.minecraft.class_1088) Exception loading blockstate definition: byg:blockstates/potted_hydrangea_bush.json: java.io.FileNotF", // minecraft insta post botania
+      ["(net.minecraft.class_1088) Unable to resolve texture reference: #missing in autoworkstations:block/iron_auto_anvil", "mc textures"], 
 
-      "(net.minecraft.class_1088) Unable to resolve texture reference: #missing in autoworkstations:block/iron_auto_anvil", // 18
+      ["(FabricLoader/Mixin) fabric-renderer-api-v1.mixins.json:client.MixinWeightedBakedModel from mod fabric-renderer-api-v1->@Inject::onInit(Ljava/util/List;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V won't be passed a CallbackInfo as a result", "mixins"], 
 
-      "(FabricLoader/Mixin) fabric-renderer-api-v1.mixins.json:client.MixinWeightedBakedModel from mod fabric-renderer-api-v1->@Inject::onInit(Ljava/util/List;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V won't be passed a CallbackInfo as a result", 
+      ["(FabricLoader/Mixin) Mixing client.MixinLayerDefinitions from byg_fabric.mixins.json", "mixins"],
 
-      "(FabricLoader/Mixin) Mixing client.MixinLayerDefinitions from byg_fabric.mixins.json", // 19
+      ["(DashLoader) ? DashLoader Statistics."], 
 
-      //"(DashLoader) ? DashLoader Statistics.", // 20
-
-      'Created: 256x256x0 minecraft:textures/atlas/mob_effects.png-atlas' // 21
-    ]
-    var labels = [
-      "", "", "", "", 
-      "", "", "", "", 
-      "", "", "", "", 
-      "", // 13 fabric prefixes log msgs
-      "LWJGL",  //14th entry, idx 13
-      "mixins",
-      "cherished worldSelect mixin", //16
-      "keyboard", //15
-      "mixins",
-      "milk mod mixin",  //17
-      "botania", //19
-      "mc blockstates",
-      "mc textures net.minecraft.class_1088", //19
-      "unknown gap", //20
-      "mixins",
-      //"dash", //21 dash
-      "game ready" //22
+      ['Created: 256x256x0 minecraft:textures/atlas/mob_effects.png-atlas', "game ready" ]
     ]
     var usePreviousLogTimestamp = []
     for (idx in messagesToMatch) {
       usePreviousLogTimestamp[idx] = false
     }
-    var usePreviousLogTimestampIndicies = [13, 14, 15, 16, 17, 18, 19, 20, 21] // not in use now
+    var usePreviousLogTimestampIndicies = [/* 13, 14, 15, 16, 17, 18, 19, 20, 21 */] // NOTE not in use now
     for (idx in usePreviousLogTimestampIndicies) {
       usePreviousLogTimestamp[usePreviousLogTimestampIndicies[idx]] = true
     }
@@ -112,7 +96,7 @@
       realTimes = [0] 
       for (idx in messagesToMatch) {
         phases[idx] = ["", 0, ""] // initialize segments. [LOG_MSG_KEY, DATEJS_STAMP, PREV_LOG_STAMP]
-        phases[idx][0] = messagesToMatch[idx] // set value
+        phases[idx][0] = messagesToMatch[idx][0] // set value
       }
     }
 
@@ -181,7 +165,7 @@
             var timestamp = dayjs(thisPhaseTime, 'HH:mm:ss')
            // console.log(`timestamp ${thisPhaseTime} is ${timestamp} of ${triGroup} based on ${matchGroups}`)
             for (idx2 in messagesToMatch) {
-              var key = messagesToMatch[idx2]
+              var key = messagesToMatch[idx2][0]
               var key2 = triGroup[2]
               //console.log(`compare ${key2} to ${key}`)
 
@@ -221,7 +205,7 @@
           var prevLogMsgStamp = dayjs(phases[idx][2], 'HH:mm:ss')
           var diff = thisStamp.diff(prevLogMsgStamp, 's')
          // console.log(`dif ${diff}`)
-          console.log(`checking ${labels[idx]} dif from prev log is ${diff} from ${phases[idx]}`)
+          console.log(`checking ${messagesToMatch[idx][0]} dif from prev log is ${diff} from ${phases[idx]}`)
           realTimes[idx] = diff
           continue
         } */
@@ -237,7 +221,7 @@
 
         var next = phases[nextId]
         var thisPhaseTime = thisStamp.format('HH:mm:ss')
-        var thisPhaseName = phases[idx][0]
+        var thisPhaseName = messagesToMatch[idx].length == 1 ? phases[idx][0] : messagesToMatch[idx][1]
 
         // expected: final phase
         if (next === undefined || next === null) {
@@ -289,8 +273,8 @@
     function genPhase(idx, duration) {
       var name = phases[idx][0]
       var time = parseInt(duration)
-      if (labels[idx].length > 0) {
-        name = labels[idx]
+      if (messagesToMatch[idx].length > 1) {
+        name = messagesToMatch[idx][1]
       }
       var result = {
         x: [''],
