@@ -63,18 +63,21 @@
       // ######## from now on, theres no code to identify phases. its all background loading
       // #########################
 
+      ["(KubeJS) Loaded client.properties", "Sponge: Mixing more"],
 
-     [ "(net.minecraft.class_1088) Exception loading blockstate definition: byg:blockstates/potted_hydrangea_bush.json: java.io.FileNotF", "mc blockstates"], // minecraft insta post botania
+     [ "(net.minecraft.class_1088) Exception loading blockstate definition: byg:blockstates/potted_hydrangea_bush.json: java.io.FileNotF", "mc blockstates"], 
+     ["(net.minecraft.class_1088) Unable to load model:", "mc models"],
 
       ["(net.minecraft.class_1088) Unable to resolve texture reference: #missing in autoworkstations:block/iron_auto_anvil", "mc textures"], 
 
-      ["(FabricLoader/Mixin) fabric-renderer-api-v1.mixins.json:client.MixinWeightedBakedModel from mod fabric-renderer-api-v1->@Inject::onInit(Ljava/util/List;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V won't be passed a CallbackInfo as a result", "mixins"], 
+      ["(net.minecraft.class_4010) Finished reloading class_1092"],
 
       ["(FabricLoader/Mixin) Mixing client.MixinLayerDefinitions from byg_fabric.mixins.json", "mixins"],
 
       ["(DashLoader) ? DashLoader Statistics."], 
 
-      ['Created: 256x256x0 minecraft:textures/atlas/mob_effects.png-atlas', "game ready" ]
+      ['Created: 256x256x0 minecraft:textures/atlas/mob_effects.png-atlas', "mc atlas" ],
+      ["(net.minecraft.class_4010) Total blocking time:", "game ready"]
     ]
     var usePreviousLogTimestamp = []
     for (idx in messagesToMatch) {
