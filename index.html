@@ -5,6 +5,14 @@
     p.dotted {
       border-style: dotted;
     }
+    label {
+      height: 100px;
+      display: inline-block;
+    
+  vertical-align: top;
+  padding-top: 25px;
+  padding-left: 25px;
+    }
   </style>
   <script src="https://unpkg.com/dayjs@1.11.3/dayjs.min.js"></script>
 
@@ -66,39 +74,29 @@
       ["(KubeJS) Loaded client.properties", "Sponge: Mixing more"],
 
      [ "(net.minecraft.class_1088) Exception loading blockstate definition: byg:blockstates/potted_hydrangea_bush.json: java.io.FileNotF", "mc blockstates"], 
-     ["(net.minecraft.class_1088) Unable to load model:", "mc models"],
+
+     ["(net.minecraft.class_1088) Unable to load model:", "mc models"], // doesnt exist when dash present
 
       ["(net.minecraft.class_1088) Unable to resolve texture reference: #missing in autoworkstations:block/iron_auto_anvil", "mc textures"], 
 
       ["(net.minecraft.class_4010) Finished reloading class_1092"],
 
       ["(FabricLoader/Mixin) Mixing client.MixinLayerDefinitions from byg_fabric.mixins.json", "mixins"],
-
-      ["(DashLoader) ? DashLoader Statistics."], 
+      
+      ["(DashLoader) ? DashLoader Statistics."], // only appears when dash mod added
 
       ['Created: 256x256x0 minecraft:textures/atlas/mob_effects.png-atlas', "mc atlas"],
+
       ["(net.minecraft.class_4010) Total blocking time:", "game ready"]
     ]
-    var usePreviousLogTimestamp = []
-    for (idx in messagesToMatch) {
-      usePreviousLogTimestamp[idx] = false
-    }
-    var usePreviousLogTimestampIndicies = [/* 13, 14, 15, 16, 17, 18, 19, 20, 21 */] // NOTE not in use now
-    for (idx in usePreviousLogTimestampIndicies) {
-      usePreviousLogTimestamp[usePreviousLogTimestampIndicies[idx]] = true
-    }
-   // console.log(`use prev ${usePreviousLogTimestamp}`)
-    
-    var realTimes = [0] // first is 0
     
     var phases = [] // 2d array [e][MATCHED_LOGMSG, DATEJS_STAMP, PREV_LOG_STAMP, LABEL]
     resetPhases()
 
     function resetPhases() {
-      phases = [] 
-      realTimes = [0] 
+      phases = []
       for (idx in messagesToMatch) {
-        phases[idx] = ["", 0, "", ""] // initialize segments. [MATCHED_LOGMSG, DATEJS_STAMP, PREV_LOG_STAMP, LABEL]
+        phases[idx] = ["", 0, "", "", 0] // initialize segments. [MATCHED_LOGMSG, DATEJS_STAMP, PREV_LOG_STAMP, LABEL]
         phases[idx][0] = messagesToMatch[idx][0] // set value
       }
     }
@@ -197,6 +195,11 @@
         }
       }
       phases = phases.filter(isValid)
+      phases.sort(function(a, b) {
+          var isbefore = a[1].isBefore(b[1])
+          var issame = a[1].isSame(b[1])
+          return issame ? 0 : isbefore ? -1 : 1
+      })
 
       console.log(phases)
 
@@ -205,57 +208,28 @@
           break
 
         var thisStamp = phases[idx][1]
-
-        /* if (usePreviousLogTimestamp[idx]) {
-          var prevLogMsgStamp = dayjs(phases[idx][2], 'HH:mm:ss')
-          var diff = thisStamp.diff(prevLogMsgStamp, 's')
-         // console.log(`dif ${diff}`)
-          console.log(`checking ${messagesToMatch[idx][0]} dif from prev log is ${diff} from ${phases[idx]}`)
-          realTimes[idx] = diff
-          continue
-        } */
-        
+        var thisPhaseTime = thisStamp.format('HH:mm:ss')
         var nextId = parseInt(idx) + 1
+        var next = phases[nextId]
 
         // edgecase: a phase not present. solved by pruning null timestamps and setting as value 0.
         if ((thisStamp instanceof dayjs) === false) {
           console.log(`no timestamp found for current phase ${idx} is ${thisStamp}`)
-          realTimes[nextId] = 0
           continue
         }
-
-        var next = phases[nextId]
-        var thisPhaseTime = thisStamp.format('HH:mm:ss')
-        var thisPhaseName = messagesToMatch[idx].length == 1 ? phases[idx][0] : messagesToMatch[idx][1]
-
         // expected: final phase
         if (next === undefined || next === null) {
-          console.log(`next phase ${nextId} is ${next}. Current phase ${thisPhaseName} timestamp is ${thisPhaseTime}`)
-          realTimes[nextId] = 0
+          console.log(`no next phase ${nextId} is ${next}. Current phase ${thisPhaseName} timestamp is ${thisPhaseTime}`)
           continue
         }
         var nextStamp = next[1]
-       // console.log(`${nextStamp}`)
-       // expected: dashloader phase timestamp won't be present if mod is disabled
-        if ((nextStamp instanceof dayjs) === false) {
-          console.log(`no timestamp found for next phase ${nextId} is ${next[0]}`)
-          realTimes[idx] = 0
-          continue
-        }
-       // console.log(`dif ${thisStamp} to ${nextStamp} from ${phases[idx]}`)
         var diff = nextStamp.diff(thisStamp, 's')
-        realTimes[idx] = diff
-        console.log(`phase ${idx} vs ${nextId} ${thisPhaseName} starting ${thisPhaseTime} took ${realTimes[idx]}s`)
+        var thisPhaseName = messagesToMatch[idx].length == 1 ? phases[idx][0] : messagesToMatch[idx][1]
+        phases[idx][4] = diff
+        console.log(`phase ${idx} ${thisPhaseName} took ${diff} from ${thisStamp} to ${nextStamp.format('HH:mm:ss')}`)
       }
       console.log(phases)
 
-      function validTime(number) {
-        return typeof(number) === 'number'
-      }
-      console.log(`pre filter ${realTimes}`)
-      realTimes = realTimes.filter(validTime)
-      console.log(`log parse complete ${realTimes}`)
-      return phases
     }
     const dropArea = document.getElementById('drop-area');
 
@@ -289,17 +263,7 @@
         orientation: 'v',
         text: name + ": " + duration + " seconds",
         insidetextanchor: 'middle',
-        //constraintext: 'both',
-        //textangle : '',
         hoverinfo: 'name+x'
-        /* marker: {
-          color: 'rgb(158,202,225)',
-          opacity: 0.6,
-          line: {
-            color: 'rgb(8,48,107)',
-            width: 1.5
-          }
-        } */
       }
       return result
     }
@@ -308,14 +272,13 @@
 
       var phasesGraph = []
       var ttl = 0
-      //console.log(`generate by ${phases} and ${realTimes}`)
+      
       for (idx in phases) {
-        var phase = phases[idx][0]
-        var time = realTimes[idx] // Math.floor(Math.random() * 6) // dummy data
+        var time = phases[idx][4] // Math.floor(Math.random() * 6) // dummy data
         ttl += parseInt(time)
-        var ph = genPhase(idx, time);
+        var ph = genPhase(idx, time)
         //console.log(ph)
-        phasesGraph.push(ph);
+        phasesGraph.push(ph)
       }
       var layoutRealGraph = {
         barmode: 'stack',
