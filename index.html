@@ -76,7 +76,7 @@
 
       ["(DashLoader) ? DashLoader Statistics."], 
 
-      ['Created: 256x256x0 minecraft:textures/atlas/mob_effects.png-atlas', "mc atlas" ],
+      ['Created: 256x256x0 minecraft:textures/atlas/mob_effects.png-atlas', "mc atlas"],
       ["(net.minecraft.class_4010) Total blocking time:", "game ready"]
     ]
     var usePreviousLogTimestamp = []
@@ -91,14 +91,14 @@
     
     var realTimes = [0] // first is 0
     
-    var phases = [] // 2d array [e][LOG_MSG_KEY, DATEJS_STAMP, PREV_LOG_STAMP]
+    var phases = [] // 2d array [e][MATCHED_LOGMSG, DATEJS_STAMP, PREV_LOG_STAMP, LABEL]
     resetPhases()
 
     function resetPhases() {
       phases = [] 
       realTimes = [0] 
       for (idx in messagesToMatch) {
-        phases[idx] = ["", 0, ""] // initialize segments. [LOG_MSG_KEY, DATEJS_STAMP, PREV_LOG_STAMP]
+        phases[idx] = ["", 0, "", ""] // initialize segments. [MATCHED_LOGMSG, DATEJS_STAMP, PREV_LOG_STAMP, LABEL]
         phases[idx][0] = messagesToMatch[idx][0] // set value
       }
     }
@@ -176,6 +176,8 @@
               if (key2.includes(key)) {
                 phases[idx2][1] = timestamp
                 phases[idx2][2] = prevlastTimestampRecorded
+                if (messagesToMatch[idx2].length >= 2)
+                  phases[idx2][3] = messagesToMatch[idx2][1]
                 //console.log(`set ${phases[idx2][0]} as ${time}`)
               }
             }
@@ -276,8 +278,8 @@
     function genPhase(idx, duration) {
       var name = phases[idx][0]
       var time = parseInt(duration)
-      if (messagesToMatch[idx].length > 1) {
-        name = messagesToMatch[idx][1]
+      if (phases[idx][3].length >= 4) {
+        name = phases[idx][3]
       }
       var result = {
         x: [''],
