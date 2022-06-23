@@ -323,7 +323,9 @@
     <br>Total modpack load time: ${ttl}`
           + ` seconds`,
         yaxis: { title: 'Duration (seconds)' },
-        xaxis: { title: 'Loading Phase' }
+        xaxis: { title: 'Loading Phase' },
+        autosize: true,
+        height: 800
       };
 
       Plotly.newPlot('actualGraphDiv', phasesGraph, layoutRealGraph);
