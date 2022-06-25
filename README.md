@@ -50,6 +50,8 @@ In order of execution:
 
 Minecraft blockstate, models, texture loading - this phase is a good 45% of the entire loading process. DashLoader mod replaces this entire phase with an alternate process which takes under 5 seconds!
 
+The other largest chunk- 35% of loading time - is mixin transformers. Can this be cached or parallelized? QuiltMC's [Chasm project](https://quiltmc.org/about/faq/developers/#Chasm) aims to achieve that, and Fabric has wanted to approach this concept for a [long time](https://i.imgur.com/VBikWkD.png). [discord message link](https://discord.com/channels/507304429255393322/566418023372816394/988561065707196516)
+
 # Thanks to
 
 [![alt-text](https://i.imgur.com/OKTTrCm.png)](https://plotly.com/javascript/) for the graph generation.
